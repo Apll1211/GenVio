@@ -1,5 +1,2 @@
-packages:
-  - .
-ignoredBuiltDependencies:
-  - sharp
-  - unrs-resolver
+# Workspace configuration removed - single package project
+# This prevents ERR_PNPM_ADDING_TO_ROOT errors in CI
