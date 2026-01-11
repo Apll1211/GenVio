@@ -59,6 +59,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.REMOTE_PORT }}
           script: |
+            export PATH="/home/apll1211/.nvm/versions/node/v22.21.1/bin:$PATH"
             cd /home/apll1211/my-app
-            /home/apll1211/.nvm/versions/node/v22.21.1/bin/pnpm install --prod
-            /home/apll1211/.nvm/versions/node/v22.21.1/bin/pm2 restart my-app || /home/apll1211/.nvm/versions/node/v22.21.1/bin/pm2 start /home/apll1211/.nvm/versions/node/v22.21.1/bin/pnpm --name "my-app" -- start
+            pnpm install --prod
+            pm2 restart my-app || pm2 start pnpm --name "my-app" -- start
