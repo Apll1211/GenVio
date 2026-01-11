@@ -14,7 +14,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v3
         with:
-          version: 9
+          version: 10
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -34,6 +34,8 @@ jobs:
           echo "Dependencies installed."
           echo "Verifying TypeScript installation..."
           pnpm list typescript
+          echo "Checking node_modules..."
+          ls -la node_modules/.pnpm/typescript@* 2>/dev/null || echo "TypeScript not found in node_modules"
           echo "Starting build..."
           pnpm build
         env:
