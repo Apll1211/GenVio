@@ -32,6 +32,8 @@ jobs:
           echo "Starting install..."
           pnpm install --frozen-lockfile
           echo "Dependencies installed."
+          echo "Verifying TypeScript installation..."
+          pnpm list typescript
           echo "Starting build..."
           pnpm build
         env:
