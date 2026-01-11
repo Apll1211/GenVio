@@ -2,12 +2,12 @@
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
-@import "./public/DingTalk JinBuTi/result.css";
+@import "./public/dingtalk-jinbuti/result.css";
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: "DingTalk JinBuTi", var(--font-geist-sans);
+  --font-sans: "dingtalk-jinbuti", var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
