@@ -4,6 +4,10 @@ declare module "face-api.js" {
 		scoreThreshold?: number;
 	}
 
+	export class TinyFaceDetectorOptions {
+		constructor(options?: { inputSize?: number; scoreThreshold?: number });
+	}
+
 	export interface WithFaceLandmarks {
 		landmarks: FaceLandmarks68;
 	}
@@ -39,18 +43,22 @@ declare module "face-api.js" {
 		};
 	};
 
+	export interface DetectSingleFaceResult {
+		withFaceLandmarks(withLandmarks: true): Promise<DetectedFace | null>;
+	}
+
 	export function detectSingleFace(
 		input: HTMLVideoElement,
 		options?: TinyFaceDetectorOptions
-	): Promise<DetectedFace | null>;
+	): DetectSingleFaceResult;
 
 	export function detectSingleFace(
 		input: HTMLVideoElement,
 		options: TinyFaceDetectorOptions
-	): Promise<DetectedFace | null>;
+	): DetectSingleFaceResult;
 
 	export function detectSingleFace(
 		input: HTMLVideoElement,
 		options: TinyFaceDetectorOptions
-	): Promise<DetectedFace | null>;
+	): DetectSingleFaceResult;
 }

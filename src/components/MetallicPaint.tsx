@@ -477,6 +477,7 @@ export default function MetallicPaint({ imageData, params = defaultParams }: Met
     let renderId: number;
 
     function render(currentTime: number) {
+      if (!gl) return;
       const deltaTime = currentTime - lastRenderTime.current;
       lastRenderTime.current = currentTime;
 

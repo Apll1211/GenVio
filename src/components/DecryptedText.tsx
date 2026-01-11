@@ -35,7 +35,7 @@ const DecryptedText: FC<DecryptedTextProps> = ({
     if (isAnimating) return;
     setIsAnimating(true);
 
-    const iterationCount = Array.from({ length: text.length }).fill(0);
+    const iterationCount = Array.from({ length: text.length }).fill(0) as number[];
     let iterations = 0;
 
     const interval = setInterval(() => {

@@ -11,7 +11,7 @@ import {
   X,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import Particles from "@/components/Particles";
@@ -478,7 +478,9 @@ export default function SearchPage() {
         <Sidebar />
         <div className="flex-1 flex flex-col">
           <Header />
-          <SearchContent />
+          <Suspense fallback={<div className="pt-20 px-4 lg:pl-24 xl:pl-48"><div className="flex items-center justify-center h-64"><div className="text-muted-foreground">加载中...</div></div></div>}>
+            <SearchContent />
+          </Suspense>
         </div>
       </div>
     </div>

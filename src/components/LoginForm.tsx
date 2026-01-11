@@ -88,7 +88,7 @@ export default function LoginForm({
   const schema = isLogin ? loginSchema : registerSchema;
 
   // 初始化表单
-  const form = useForm<RegisterFormValues>({
+  const form = useForm<any>({
     resolver: zodResolver(schema as any),
     defaultValues: {
       username: "",
@@ -116,7 +116,7 @@ export default function LoginForm({
   const handleRegisterSubmit = async (values: any) => {
     setIsLoading(true);
     try {
-      await onRegister(values.phone, values.password, values.confirmPassword);
+      await onRegister?.(values.phone, values.password, values.confirmPassword);
       onClose();
       form.reset();
     } catch (error) {

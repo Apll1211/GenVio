@@ -407,8 +407,12 @@ const distortion_vertex = `
   }
 `;
 
-function random(base: number | [number, number]): number {
+function random(base: number | [number, number] | number[]): number {
   if (Array.isArray(base)) {
+    if (base.length === 2) {
+      return Math.random() * (base[1] - base[0]) + base[0];
+    }
+    // Handle number[] with more than 2 elements
     return Math.random() * (base[1] - base[0]) + base[0];
   }
   return Math.random() * base;
@@ -433,7 +437,7 @@ class CarLights {
   webgl: App;
   options: HyperspeedOptions;
   colors: number[] | THREE.Color;
-  speed: [number, number];
+  speed: number[];
   fade: THREE.Vector2;
   mesh!: THREE.Mesh<THREE.InstancedBufferGeometry, THREE.ShaderMaterial>;
 
@@ -441,7 +445,7 @@ class CarLights {
     webgl: App,
     options: HyperspeedOptions,
     colors: number[] | THREE.Color,
-    speed: [number, number],
+    speed: number[],
     fade: THREE.Vector2
   ) {
     this.webgl = webgl;
