@@ -15,7 +15,7 @@ interface SortableUserItemProps {
   setEditingUserId: (id: string | null) => void;
   setEditingUsername: (username: string) => void;
   setEditingPassword: (password: string) => void;
-  setShowPassword: (show: Record<string, boolean>) => void;
+  setShowPassword: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
   onDelete: (id: string) => void;
 }
 

@@ -43,7 +43,7 @@ interface HealthStatus {
 
 interface TableParams {
   pagination: TablePaginationConfig;
-  filters: Record<string, (string | number | boolean)[] | null>;
+  filters: Record<string, any[] | null>;
   sorter: {
     field: string;
     order: "ascend" | "descend" | null;
@@ -199,7 +199,7 @@ export default function JsonServerManager({
       // 添加过滤参数
       Object.entries(filters || {}).forEach(([key, values]) => {
         if (values && values.length > 0) {
-          values.forEach((value) => {
+          values.forEach((value: any) => {
             params.append(key, String(value));
           });
         }
@@ -247,7 +247,7 @@ export default function JsonServerManager({
     } finally {
       setLoading(false);
     }
-  }, [selectedResource, jsonServerUrl]); // 移除 tableParams 和 searchText 依赖
+  }, [selectedResource, jsonServerUrl, tableParams, searchText]);
 
   // 检查健康状态
   const checkHealth = useCallback(async () => {
@@ -454,12 +454,13 @@ export default function JsonServerManager({
     filters,
     sorter,
   ) => {
+    const sorterResult = Array.isArray(sorter) ? sorter[0] : sorter;
     setTableParams({
       pagination: newPagination,
       filters,
       sorter: {
-        field: (sorter.field as string) || "",
-        order: sorter.order as "ascend" | "descend" | null,
+        field: (sorterResult?.field as string) || "",
+        order: sorterResult?.order as "ascend" | "descend" | null,
       },
     });
   };
@@ -474,7 +475,7 @@ export default function JsonServerManager({
     if (selectedResource) {
       fetchData();
     }
-  }, [selectedResource, jsonServerUrl]); // 移除 fetchData 依赖
+  }, [selectedResource, fetchData]);
 
   return (
     <Card

@@ -2,7 +2,7 @@ name: Next.js Deploy
 
 on:
   push:
-    branches: [ main ] 
+    branches: [main]
 
 jobs:
   build-and-deploy:
@@ -20,12 +20,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Build Project
         run: |
-          pnpm install
+          echo "Starting install..."
+          pnpm install --no-frozen-lockfile
+          echo "Dependencies installed."
+          echo "Starting build..."
           pnpm build
+        env:
+          NODE_ENV: production
 
       - name: Deploy to Server
         uses: appleboy/scp-action@v0.1.7

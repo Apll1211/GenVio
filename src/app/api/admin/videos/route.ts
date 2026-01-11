@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
+import Database from "better-sqlite3";
 import { recordOperation } from "@/lib/backup";
 import { db, generateId, getCurrentTime } from "@/lib/db";
 
