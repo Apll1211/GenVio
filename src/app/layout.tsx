@@ -18,7 +18,20 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN" suppressHydrationWarning>
-      <body className="font-sans antialiased">
+      <head>
+        <link rel="stylesheet" href="/dingtalk-jinbuti/result.css" />
+        <style>
+          {`
+            @font-face {
+              font-family: "dingtalk-jinbuti";
+              src: local("dingtalk-jinbuti"), url("/dingtalk-jinbuti/0b76bcfbb117a80057d1f8b1fabcc927.woff2") format("woff2");
+              font-display: swap;
+              font-weight: 400;
+            }
+          `}
+        </style>
+      </head>
+      <body className="font-sans antialiased" style={{ fontFamily: '"dingtalk-jinbuti", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}>
         <SplashCursorProvider>
           <SplashCursor />
           <Providers>
