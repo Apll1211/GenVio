@@ -1,6 +1,13 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
+import {
+  createContext,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
 interface SplashCursorContextType {
   isEnabled: boolean;
@@ -63,7 +70,9 @@ export function SplashCursorProvider({ children }: { children: ReactNode }) {
 export function useSplashCursor() {
   const context = useContext(SplashCursorContext);
   if (context === undefined) {
-    throw new Error("useSplashCursor must be used within a SplashCursorProvider");
+    throw new Error(
+      "useSplashCursor must be used within a SplashCursorProvider",
+    );
   }
   return context;
 }

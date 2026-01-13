@@ -3,27 +3,19 @@
 import { motion } from "framer-motion";
 import {
   Compass,
-  Film,
   Heart,
   Home,
-  PlayCircle,
-  Radio,
-  Settings,
-  Sparkles,
-  User,
-  Users,
-  Palette,
   type LucideIcon,
+  Palette,
+  Sparkles,
+  Users,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import {
-  navItemVariants,
-  transitions,
-} from "@/lib/animations";
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import MetallicPaint, { parseLogoImage } from "@/components/MetallicPaint";
 import ShinyText from "@/components/ShinyText";
 import { useSplashCursor } from "@/context/SplashCursorContext";
-import MetallicPaint, { parseLogoImage } from "@/components/MetallicPaint";
+import { navItemVariants, transitions } from "@/lib/animations";
 
 // 图标映射
 const iconMap: Record<string, LucideIcon> = {
@@ -32,10 +24,6 @@ const iconMap: Record<string, LucideIcon> = {
   Sparkles,
   Heart,
   Users,
-  User,
-  Radio,
-  Film,
-  PlayCircle,
   Palette,
 };
 
@@ -61,17 +49,21 @@ export default function Sidebar() {
   useEffect(() => {
     async function loadLogoImage() {
       try {
-        console.log('Sidebar: Loading logo.svg...');
-        const response = await fetch('/logo.svg');
+        console.log("Sidebar: Loading logo.svg...");
+        const response = await fetch("/logo.svg");
         const blob = await response.blob();
         const file = new File([blob], "logo.svg", { type: blob.type });
-        console.log('Sidebar: Logo file created', { file, size: file.size, type: file.type });
+        console.log("Sidebar: Logo file created", {
+          file,
+          size: file.size,
+          type: file.type,
+        });
 
         const parsedData = await parseLogoImage(file);
-        console.log('Sidebar: Logo parsed successfully', {
+        console.log("Sidebar: Logo parsed successfully", {
           imageData: parsedData?.imageData,
           width: parsedData?.imageData?.width,
-          height: parsedData?.imageData?.height
+          height: parsedData?.imageData?.height,
         });
         setImageData(parsedData?.imageData ?? null);
       } catch (err) {
@@ -100,28 +92,23 @@ export default function Sidebar() {
 
     // 初始加载
     fetchSidebarItems();
-
-    // 监听自定义事件，当侧边栏配置更新时刷新
-    const handleSidebarUpdate = () => {
-      fetchSidebarItems();
-    };
-
-    window.addEventListener('sidebar-update', handleSidebarUpdate);
-    
-    return () => {
-      window.removeEventListener('sidebar-update', handleSidebarUpdate);
-    };
   }, []);
 
-  const handleNavigation = useCallback((path: string) => {
-    if (path) {
-      router.push(path);
-    }
-  }, [router]);
+  const handleNavigation = useCallback(
+    (path: string) => {
+      if (path) {
+        router.push(path);
+      }
+    },
+    [router],
+  );
 
-  const isActive = useCallback((path: string | null) => {
-    return path ? pathname === path : false;
-  }, [pathname]);
+  const isActive = useCallback(
+    (path: string | null) => {
+      return path ? pathname === path : false;
+    },
+    [pathname],
+  );
 
   return (
     <aside className="fixed left-0 top-0 z-40 hidden h-screen w-20 bg-background/80 backdrop-blur-xl border-r border-border lg:block xl:w-44 select-none">
@@ -142,7 +129,14 @@ export default function Sidebar() {
               {imageData && (
                 <MetallicPaint
                   imageData={imageData}
-                  params={{ edge: 1.5, patternBlur: 0.003, patternScale: 1.5, refraction: 0.02, speed: 0.4, liquid: 0.1 }}
+                  params={{
+                    edge: 1.5,
+                    patternBlur: 0.003,
+                    patternScale: 1.5,
+                    refraction: 0.02,
+                    speed: 0.4,
+                    liquid: 0.1,
+                  }}
                 />
               )}
             </motion.div>
@@ -257,30 +251,6 @@ export default function Sidebar() {
                 transition={transitions.smooth}
               />
             </motion.div>
-          </motion.button>
-        </div>
-
-        {/* Admin Panel Entry - Bottom Left */}
-        <div className="px-2 pb-4">
-          <motion.button
-            type="button"
-            variants={navItemVariants}
-            initial="initial"
-            whileHover="hover"
-            whileTap="tap"
-            onClick={() => router.push("/admin")}
-            className="group flex h-11 w-full items-center justify-center gap-3 rounded-xl transition-all duration-200 text-muted-foreground hover:bg-accent hover:text-accent-foreground cursor-pointer select-none"
-          >
-            <motion.div
-              whileHover={{ rotate: [-10, 10, -10, 0] }}
-              transition={{ type: "tween", duration: 0.3 }}
-              whileTap={{ scale: 0.9 }}
-            >
-              <Settings className="h-5 w-5 shrink-0" />
-            </motion.div>
-            <span className="hidden text-sm font-medium xl:block">
-              后台管理
-            </span>
           </motion.button>
         </div>
       </div>

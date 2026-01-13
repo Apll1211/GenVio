@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Header from "@/components/layout/Header";
-import Sidebar from "@/components/layout/Sidebar";
 import Particles from "@/components/Particles";
 import VideoStream from "@/components/VideoStream";
 
@@ -80,18 +79,15 @@ export default function RecommendPage() {
 
   return (
     <div className="relative h-screen bg-background overflow-hidden">
-      <div className="flex flex-col lg:flex-row h-full">
-        <Sidebar />
-        <div className="flex-1 flex flex-col h-full lg:ml-20 xl:ml-44">
-          <Header />
-          {/* Video Stream */}
-          <div className="flex-1 h-[calc(100vh-4rem)] pt-16 overflow-hidden">
-            <VideoStream
-              videos={videos}
-              onLoadMore={handleLoadMore}
-              hasMore={hasMore}
-            />
-          </div>
+      <div className="flex flex-col h-full">
+        <Header />
+        {/* Video Stream */}
+        <div className="flex-1 h-[calc(100vh-4rem)] pt-16 overflow-hidden">
+          <VideoStream
+            videos={videos}
+            onLoadMore={handleLoadMore}
+            hasMore={hasMore}
+          />
         </div>
       </div>
     </div>

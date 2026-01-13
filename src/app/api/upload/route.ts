@@ -1,61 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
 import path from "path";
 import fs from "fs";
-import { FFmpeg } from "@ffmpeg/ffmpeg";
-import { fetchFile, toBlobURL } from "@ffmpeg/util";
 
-// 生成视频缩略图（使用 ffmpeg.wasm）
-async function generateThumbnail(
-  inputPath: string,
-  outputPath: string,
-  width: number = 320,
-  height: number = 180
-): Promise<void> {
-  try {
-    const ffmpeg = new FFmpeg();
-    
-    // 加载 FFmpeg 核心文件
-    const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm";
-    await ffmpeg.load({
-      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
-      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
-    });
-
-    // 读取视频文件
-    const videoData = await fetchFile(inputPath);
-    await ffmpeg.writeFile("input.mp4", videoData);
-
-    // 生成缩略图
-    await ffmpeg.exec([
-      "-i",
-      "input.mp4",
-      "-ss",
-      "00:00:01",
-      "-vframes",
-      "1",
-      "-vf",
-      `scale=${width}:${height}`,
-      "-q:v",
-      "2",
-      "output.jpg",
-    ]);
-
-    // 读取生成的缩略图
-    const thumbnailData = await ffmpeg.readFile("output.jpg");
-    
-    // 将缩略图写入文件系统
-    fs.writeFileSync(outputPath, thumbnailData);
-
-    // 清理临时文件
-    await ffmpeg.deleteFile("input.mp4");
-    await ffmpeg.deleteFile("output.jpg");
-  } catch (error) {
-    console.error("Failed to generate thumbnail:", error);
-    throw error;
-  }
-}
-
-// POST - 文件上传
+// POST - 图片上传
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -68,25 +15,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 验证文件类型
+    // 验证文件类型（只允许图片）
     const allowedTypes = [
-      "video/mp4",
-      "video/quicktime",
-      "video/x-msvideo",
-      "video/x-matroska",
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+      "image/svg+xml",
     ];
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
-        { success: false, error: "不支持的文件类型" },
+        { success: false, error: "不支持的文件类型，只允许图片文件" },
         { status: 400 }
       );
     }
 
-    // 验证文件大小（100MB）
-    const maxSize = 100 * 1024 * 1024;
+    // 验证文件大小（10MB）
+    const maxSize = 10 * 1024 * 1024;
     if (file.size > maxSize) {
       return NextResponse.json(
-        { success: false, error: "文件大小超过限制" },
+        { success: false, error: "文件大小超过限制（最大10MB）" },
         { status: 400 }
       );
     }
@@ -110,23 +59,9 @@ export async function POST(request: NextRequest) {
 
     const fileUrl = `/uploads/${fileName}`;
 
-    // 生成缩略图
-    let thumbnailUrl = "";
-    try {
-      const thumbnailFileName = `${timestamp}-${randomStr}_thumbnail.jpg`;
-      const thumbnailPath = path.join(uploadsDir, thumbnailFileName);
-      
-      await generateThumbnail(filePath, thumbnailPath);
-      thumbnailUrl = `/uploads/${thumbnailFileName}`;
-    } catch (error) {
-      console.error("生成缩略图失败:", error);
-      // 缩略图生成失败不影响视频上传
-    }
-
     return NextResponse.json({
       success: true,
       fileUrl,
-      thumbnailUrl,
       fileName: file.name,
       fileSize: file.size,
     });

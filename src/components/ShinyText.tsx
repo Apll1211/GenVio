@@ -1,9 +1,4 @@
-import {
-  motion,
-  useAnimationFrame,
-  useMotionValue,
-  useTransform,
-} from "motion/react";
+import { motion, useMotionValue, useTransform } from "motion/react";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -39,18 +34,21 @@ const ShinyText: React.FC<ShinyTextProps> = ({
   const elapsedRef = useRef(0);
   const lastTimeRef = useRef<number | null>(null);
   const directionRef = useRef(direction === "left" ? 1 : -1);
+  const rafRef = useRef<number | null>(null);
 
   const animationDuration = speed * 1000;
   const delayDuration = delay * 1000;
 
-  useAnimationFrame((time) => {
+  const animate = useCallback((time: number) => {
     if (disabled || isPaused) {
       lastTimeRef.current = null;
+      rafRef.current = requestAnimationFrame(animate);
       return;
     }
 
     if (lastTimeRef.current === null) {
       lastTimeRef.current = time;
+      rafRef.current = requestAnimationFrame(animate);
       return;
     }
 
@@ -94,19 +92,31 @@ const ShinyText: React.FC<ShinyTextProps> = ({
         progress.set(directionRef.current === 1 ? 100 : 0);
       }
     }
-  });
+
+    rafRef.current = requestAnimationFrame(animate);
+  }, [disabled, isPaused, yoyo, animationDuration, delayDuration, progress]);
+
+  useEffect(() => {
+    if (!disabled) {
+      rafRef.current = requestAnimationFrame(animate);
+    }
+    return () => {
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+      }
+    };
+  }, [disabled, animate]);
 
   useEffect(() => {
     directionRef.current = direction === "left" ? 1 : -1;
     elapsedRef.current = 0;
     progress.set(0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [direction]);
+  }, [direction, progress]);
 
   // Transform: p=0 -> 150% (shine off right), p=100 -> -50% (shine off left)
-  const backgroundPosition = useTransform(
+  const backgroundPositionX = useTransform(
     progress,
-    (p) => `${150 - p * 2}% center`,
+    (p) => `${150 - p * 2}% center`
   );
 
   const handleMouseEnter = useCallback(() => {
@@ -128,7 +138,10 @@ const ShinyText: React.FC<ShinyTextProps> = ({
   return (
     <motion.span
       className={`inline-block ${className}`}
-      style={{ ...gradientStyle, backgroundPosition }}
+      style={{
+        ...gradientStyle,
+        backgroundPosition: backgroundPositionX,
+      }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >

@@ -13,7 +13,6 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import Header from "@/components/layout/Header";
-import Sidebar from "@/components/layout/Sidebar";
 import Particles from "@/components/Particles";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
@@ -216,7 +215,7 @@ function SearchContent() {
 
   if (isLoading && videos.length === 0) {
     return (
-      <div className="relative pt-20 px-4 lg:pl-24 xl:pl-48 scrollbar-thin">
+      <div className="relative pt-20 px-4 scrollbar-thin">
         <div className="flex items-center justify-center h-64">
           <div className="text-muted-foreground">搜索中...</div>
         </div>
@@ -225,7 +224,7 @@ function SearchContent() {
   }
 
   return (
-    <div className="relative pt-20 px-4 lg:pl-24 xl:pl-48 scrollbar-thin">
+    <div className="relative pt-20 px-4 scrollbar-thin">
       {/* Particles Background */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <Particles
@@ -474,14 +473,11 @@ export default function SearchPage() {
         />
       </div>
 
-      <div className="flex flex-col lg:flex-row">
-        <Sidebar />
-        <div className="flex-1 flex flex-col">
-          <Header />
-          <Suspense fallback={<div className="pt-20 px-4 lg:pl-24 xl:pl-48"><div className="flex items-center justify-center h-64"><div className="text-muted-foreground">加载中...</div></div></div>}>
-            <SearchContent />
-          </Suspense>
-        </div>
+      <div className="flex flex-col">
+        <Header />
+        <Suspense fallback={<div className="pt-20 px-4"><div className="flex items-center justify-center h-64"><div className="text-muted-foreground">加载中...</div></div></div>}>
+          <SearchContent />
+        </Suspense>
       </div>
     </div>
   );

@@ -1,25 +1,17 @@
-import FeaturedVideos from "@/components/FeaturedVideos";
 import Header from "@/components/layout/Header";
 import SecondaryNav from "@/components/layout/SecondaryNav";
-import Sidebar from "@/components/layout/Sidebar";
-import VideoGrid from "@/components/layout/VideoGrid";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden flex flex-col lg:flex-row">
-      <Sidebar />
-      <div className="flex-1 flex flex-col lg:ml-20 xl:ml-44">
-        <Header />
-        <SecondaryNav />
-        <div className="flex-1 pt-28">
-          {/* 热门推荐区域 */}
-          <div className="px-4 mb-8 mt-6">
-            <FeaturedVideos />
-          </div>
-          
-          {/* 视频网格 */}
-          <div className="px-4">
-            <VideoGrid />
+    <div className="min-h-screen bg-background overflow-x-hidden">
+      <Header />
+      <SecondaryNav />
+      <div className="flex-1 pt-28">
+        {/* 博客内容区域 */}
+        <div className="px-4">
+          <div className="text-center py-12">
+            <h1 className="text-3xl font-bold mb-4">欢迎来到我的博客</h1>
+            <p className="text-muted-foreground">这里将展示我的文章和内容</p>
           </div>
         </div>
       </div>

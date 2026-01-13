@@ -1,111 +1,249 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Bell,
-  Diamond,
-  LogOut,
-  Menu,
-  MessageCircle,
-  Monitor,
-  Search,
-  Type,
-  Upload,
-  Sparkles,
-  User,
-} from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState, useCallback } from "react";
-import { toast } from "sonner";
-import LoginForm from "@/components/LoginForm";
-import MobileMenuSheet from "@/components/layout/MobileMenuSheet";
-import { useAuth } from "@/context/AuthContext";
+import { Search, Sparkles, Sun, Moon, Menu, X, Settings, Home, Compass, Heart, Users } from "lucide-react";
+import MetallicPaint, { parseLogoImage } from "@/components/MetallicPaint";
+import ShinyText from "@/components/ShinyText";
+import { useRouter, usePathname } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
 import {
   buttonVariants,
-  iconButtonVariants,
   transitions,
 } from "@/lib/animations";
+import { useSplashCursor } from "@/context/SplashCursorContext";
+import { useTheme } from "@/context/ThemeContext";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+
+// Mobile Menu Button Component - Uses existing MobileMenuSheet
+function MobileMenuButton() {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      <SheetTrigger asChild>
+        <button
+          type="button"
+          className="md:hidden flex items-center gap-2 px-2 py-1.5 rounded-lg bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground active:scale-95 transition-transform active:bg-accent/50"
+          aria-label="打开菜单"
+        >
+          <Menu className="h-4 w-4" />
+        </button>
+      </SheetTrigger>
+      <SheetContent side="left" className="w-[85vw] max-w-sm p-0 sm:w-80">
+        <SheetTitle className="sr-only">导航菜单</SheetTitle>
+        {/* Use existing MobileMenuSheet component */}
+        <MobileMenuSheetContent />
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+// MobileMenuSheetContent - Simplified for performance
+function MobileMenuSheetContent() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const { isEnabled, toggleEnabled } = useSplashCursor();
+  const [sidebarItems, setSidebarItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Load data when component mounts
+  useEffect(() => {
+    const loadSidebarData = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch("/api/sidebar");
+        if (response.ok) {
+          const data = await response.json();
+          if (data.items) {
+            setSidebarItems(data.items);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load sidebar:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadSidebarData();
+  }, []);
+
+  const handleNavigation = (path: string) => {
+    router.push(path);
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmedQuery = searchQuery.trim();
+    if (trimmedQuery) {
+      router.push(`/search?q=${encodeURIComponent(trimmedQuery)}`);
+    }
+  };
+
+  const iconMap: Record<string, any> = {
+    Home,
+    Compass,
+    Sparkles,
+    Heart,
+    Users,
+    Settings,
+  };
+
+  return (
+    <>
+      {/* Mobile Search Bar */}
+      <div className="border-b border-border p-4">
+        <form onSubmit={handleSearchSubmit} className="flex items-center gap-2">
+          <div className="relative flex-1 min-w-0">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+              <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            </div>
+            <input
+              type="text"
+              placeholder="搜索内容"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              maxLength={100}
+              className="h-9 w-full rounded-lg bg-muted pl-9 pr-8 text-sm outline-none border border-transparent focus:ring-2 focus:ring-primary/50 focus:border-primary placeholder:text-muted-foreground/60"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center w-5 h-5 rounded-full bg-muted-foreground/20 text-muted-foreground hover:bg-muted-foreground/30 active:bg-muted-foreground/50"
+                aria-label="清空搜索"
+              >
+                <span className="text-[10px] font-bold">×</span>
+              </button>
+            )}
+          </div>
+          <button
+            type="submit"
+            className="px-3 h-9 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95 transition-transform text-sm font-medium"
+          >
+            搜索
+          </button>
+        </form>
+      </div>
+
+      {/* Navigation Items */}
+      <div className="flex h-full flex-col overflow-y-auto">
+        <nav className="flex flex-1 flex-col gap-1 p-2">
+          {loading ? (
+            <div className="flex items-center justify-center py-6 text-sm text-muted-foreground">
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                <span>加载中...</span>
+              </div>
+            </div>
+          ) : (
+            sidebarItems.map((item) => {
+              if (item.item_type === "divider") {
+                return (
+                  <div key={item.id} className="my-2 h-px w-full bg-border opacity-60" />
+                );
+              }
+
+              const Icon = item.icon_name ? iconMap[item.icon_name] : null;
+              if (!Icon) return null;
+
+              const isActive = item.path ? pathname === item.path : false;
+
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => handleNavigation(item.path || "")}
+                  className={`flex h-12 items-center gap-3 rounded-lg px-4 text-sm font-medium transition-all duration-200 ${
+                    isActive
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  }`}
+                >
+                  <Icon className="h-5 w-5 shrink-0" />
+                  <span className="flex-1 text-left">{item.label}</span>
+                  {isActive && (
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                  )}
+                </button>
+              );
+            })
+          )}
+        </nav>
+
+        {/* Quick Actions */}
+        <div className="border-t border-border p-3">
+          <div className="text-xs font-medium text-muted-foreground mb-2 px-1">
+            快捷设置
+          </div>
+          <div className="flex flex-col gap-1">
+            <button
+              type="button"
+              onClick={toggleEnabled}
+              className="flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground active:bg-accent/50"
+            >
+              <div className="flex items-center gap-3">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <span>滑动特效</span>
+              </div>
+              <div
+                className={`relative h-5 w-9 rounded-full transition-colors ${
+                  isEnabled ? "bg-primary" : "bg-muted"
+                }`}
+              >
+                <div
+                  className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
+                    isEnabled ? "translate-x-4" : "translate-x-0.5"
+                  }`}
+                />
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleNavigation("/admin")}
+              className="flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground active:bg-accent/50 border border-border/50 mt-2"
+            >
+              <Settings className="h-4 w-4" />
+              <span>后台管理</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
 
 export default function Header() {
   const router = useRouter();
-  const { user, login, logout, isAuthenticated } = useAuth();
-  const [isLoginFormOpen, setIsLoginFormOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { isEnabled, toggleEnabled } = useSplashCursor();
+  const { theme, isDark, mode, toggleTheme } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
+  const [imageData, setImageData] = useState<ImageData | null>(null);
 
-  const handleLogin = async (username: string, password: string) => {
-    try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, password }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "登录失败");
+  // 加载 logo.svg 并解析为 ImageData
+  useEffect(() => {
+    async function loadLogoImage() {
+      try {
+        const response = await fetch("/logo.svg");
+        const blob = await response.blob();
+        const file = new File([blob], "logo.svg", { type: blob.type });
+        const parsedData = await parseLogoImage(file);
+        setImageData(parsedData?.imageData ?? null);
+      } catch (err) {
+        console.error("Header: Error loading logo image:", err);
       }
-
-      const data = await response.json();
-      console.log("Login successful:", data);
-
-      // 更新认证状态
-      login({
-        id: data.user.id,
-        username: data.user.username,
-        nickname: data.user.nickname,
-        bio: data.user.bio,
-        avatar: data.user.avatar,
-        role: data.user.role,
-      });
-
-      toast.success("登录成功！");
-      setIsLoginFormOpen(false);
-    } catch (error) {
-      console.error("Login error:", error);
-      toast.error(error instanceof Error ? error.message : "登录失败");
-      throw error;
     }
-  };
 
-  const handleRegister = async (
-    username: string,
-    password: string,
-    confirmPassword: string,
-  ) => {
-    try {
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, password, confirmPassword }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "注册失败");
-      }
-
-      const data = await response.json();
-      console.log("Register successful:", data);
-      toast.success("注册成功！请登录");
-    } catch (error) {
-      console.error("Register error:", error);
-      toast.error(error instanceof Error ? error.message : "注册失败");
-      throw error;
-    }
-  };
-
-  const handleUploadClick = useCallback(() => {
-    if (!isAuthenticated) {
-      setIsLoginFormOpen(true);
-    } else {
-      router.push("/user");
-    }
-  }, [isAuthenticated, router]);
+    loadLogoImage();
+  }, []);
 
   // 处理搜索输入变化
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -126,41 +264,67 @@ export default function Header() {
     }
   }, [searchQuery, router]);
 
-  const handleLogout = useCallback(() => {
-    logout();
-    toast.success("已退出登录");
-  }, [logout]);
-
   return (
-    <header className="fixed left-0 right-0 top-0 z-50 h-16 bg-background/70 backdrop-blur-xl border-b border-border lg:left-20 xl:left-44">
-      <div className="flex h-full items-center justify-between px-4 md:px-6">
-        {/* Left: Mobile Menu Button & Search Bar */}
+    <header className="fixed left-0 right-0 top-0 z-50 h-16 bg-background/70 backdrop-blur-xl border-b border-border">
+      <div className="flex h-full items-center justify-between px-3 md:px-6">
+        {/* Left: Mobile Menu Trigger */}
         <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0 overflow-hidden">
-          {/* Mobile Menu Button */}
-          <motion.button
-            type="button"
-            variants={iconButtonVariants}
-            initial="initial"
-            whileHover="hover"
-            whileTap="tap"
-            onClick={() => setIsMobileMenuOpen(true)}
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground lg:hidden shrink-0"
+          {/* Mobile Menu Trigger */}
+          <MobileMenuButton />
+
+          {/* Desktop Logo - Hidden on mobile */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={transitions.bouncy}
+            className="hidden md:flex items-center gap-2 mr-2"
           >
             <motion.div
-              animate={isMobileMenuOpen ? { rotate: 180 } : { rotate: 0 }}
+              className="relative flex h-7 w-7 items-center justify-center overflow-hidden select-none"
+              whileHover={{ scale: 1.1 }}
               transition={transitions.smooth}
             >
-              <Menu className="h-5 w-5" />
+              {imageData && (
+                <MetallicPaint
+                  imageData={imageData}
+                  params={{
+                    edge: 1.5,
+                    patternBlur: 0.003,
+                    patternScale: 1.5,
+                    refraction: 0.02,
+                    speed: 0.4,
+                    liquid: 0.1,
+                  }}
+                />
+              )}
             </motion.div>
-          </motion.button>
+            <motion.div
+              whileHover={{ letterSpacing: "0.05em" }}
+              transition={transitions.smooth}
+            >
+              <ShinyText
+                text="GenVio"
+                speed={3}
+                delay={0}
+                color="#6b7280"
+                shineColor="#ffffff"
+                spread={120}
+                direction="left"
+                yoyo={false}
+                pauseOnHover={false}
+                className="text-base font-bold select-none"
+              />
+            </motion.div>
+          </motion.div>
 
-          {/* Search Bar */}
+          {/* Desktop Search Bar */}
           <motion.form
             onSubmit={handleSearchSubmit}
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={transitions.gentle}
-            className="relative w-40 md:w-80 flex-1 min-w-0 max-w-md"
+            className="hidden md:flex relative w-80 flex-1 min-w-0 max-w-md"
+            aria-label="搜索表单"
           >
             <motion.div
               className="absolute left-3 top-1/2 -translate-y-1/2"
@@ -187,14 +351,12 @@ export default function Header() {
             </motion.div>
             <motion.input
               type="text"
-              placeholder="搜索视频、作者、标签"
+              placeholder="搜索文章、内容、标签"
               value={searchQuery}
               onChange={handleSearchChange}
               maxLength={100}
               className="h-9 w-full rounded-full bg-muted px-10 py-2 text-sm outline-none border-2 border-transparent focus:ring-0 focus:border-primary placeholder:text-muted-foreground/70"
             />
-          </motion.form>
-            {/* Search suggestion indicator */}
             <AnimatePresence>
               {searchQuery && (
                 <motion.div
@@ -210,203 +372,87 @@ export default function Header() {
                 </motion.div>
               )}
             </AnimatePresence>
+          </motion.form>
+
+          {/* Mobile Center Logo/GenVio - Only on mobile */}
+          <div className="md:hidden flex items-center justify-center gap-2 flex-1 min-w-0">
+            <div className="relative flex h-8 w-8 items-center justify-center overflow-hidden select-none flex-shrink-0">
+              {imageData && (
+                <MetallicPaint
+                  imageData={imageData}
+                  params={{
+                    edge: 1.5,
+                    patternBlur: 0.003,
+                    patternScale: 1.5,
+                    refraction: 0.02,
+                    speed: 0.4,
+                    liquid: 0.1,
+                  }}
+                />
+              )}
+            </div>
+            <div className="text-lg font-bold select-none text-gray-600 whitespace-nowrap">
+              GenVio
+            </div>
+          </div>
         </div>
 
-        {/* Right: Actions */}
-        <div className="flex items-center gap-2 md:gap-4">
-          {/* Diamond - Desktop only */}
+        {/* Right: Theme Toggle & Splash Cursor */}
+        <div className="flex items-center gap-1 md:gap-2">
+          {/* Theme Toggle - Compact on mobile with better spacing */}
           <motion.button
             type="button"
-            whileHover={{ scale: 1.05 }}
+            onClick={toggleTheme}
+            className="flex items-center justify-center w-8 h-8 md:w-9 md:h-9 rounded-lg bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground active:scale-95 active:bg-accent/50 transition-transform ml-1 md:ml-2"
+            whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.95 }}
-            className="hidden md:flex items-center gap-1.5 rounded-full bg-linear-to-r from-yellow-400 to-orange-500 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:opacity-90 shrink-0"
-          >
-            <Diamond className="h-4 w-4" />
-            <span>充值</span>
-          </motion.button>
-
-          {/* Icon Buttons - Hidden on mobile */}
-          <motion.button
-            type="button"
-            variants={buttonVariants}
-            initial="initial"
-            whileHover="hover"
-            whileTap="tap"
-            className="hidden md:flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground shrink-0"
+            transition={transitions.smooth}
+            aria-label="切换主题"
+            title={mode === "auto" ? "当前为自动模式，点击切换为手动控制" : "手动控制主题，点击切换回自动模式"}
           >
             <motion.div
-              whileHover={{ rotate: 15 }}
+              className="relative w-4 h-4"
+              animate={{ rotate: isDark ? 180 : 0 }}
               transition={transitions.smooth}
             >
-              <Monitor className="h-4 w-4" />
-            </motion.div>
-            <span>客户端</span>
-          </motion.button>
-
-          <motion.button
-            type="button"
-            variants={buttonVariants}
-            initial="initial"
-            whileHover="hover"
-            whileTap="tap"
-            className="hidden md:flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground shrink-0"
-          >
-            <motion.div
-              whileHover={{ rotate: -15 }}
-              transition={transitions.smooth}
-            >
-              <Type className="h-4 w-4" />
-            </motion.div>
-            <span>壁纸</span>
-          </motion.button>
-
-          {/* Notification Icons - Only Bell on mobile */}
-          <motion.button
-            type="button"
-            variants={iconButtonVariants}
-            initial="initial"
-            whileHover="hover"
-            whileTap="tap"
-            className="relative flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-          >
-            <Bell className="h-5 w-5" />
-            {/* Notification Badge */}
-            <motion.div
-              className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-red-500"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={transitions.bouncy}
-            />
-          </motion.button>
-
-          {/* Message Circle - Hidden on mobile */}
-          <motion.button
-            type="button"
-            variants={iconButtonVariants}
-            initial="initial"
-            whileHover="hover"
-            whileTap="tap"
-            className="hidden relative h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-accent-foreground md:flex"
-          >
-            <motion.div
-              whileHover={{ rotate: -15 }}
-              transition={transitions.smooth}
-            >
-              <MessageCircle className="h-5 w-5" />
+              {isDark ? (
+                <Moon className="absolute inset-0 w-4 h-4" />
+              ) : (
+                <Sun className="absolute inset-0 w-4 h-4" />
+              )}
             </motion.div>
           </motion.button>
 
-          {/* Upload Button - Hidden on mobile */}
+          {/* Splash Cursor Toggle - Hidden on mobile */}
           <motion.button
             type="button"
-            variants={buttonVariants}
-            initial="initial"
-            whileHover="hover"
-            whileTap="tap"
-            onClick={handleUploadClick}
-            className="hidden md:flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground shrink-0"
+            onClick={toggleEnabled}
+            className="hidden sm:flex items-center gap-2 rounded-lg px-2 md:px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground active:scale-95 active:bg-accent/50 transition-transform"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.95 }}
+            transition={transitions.smooth}
+            aria-label="切换滑动特效"
           >
+            <Sparkles className="h-4 w-4" />
+            <span className="hidden md:block">滑动特效</span>
             <motion.div
-              whileHover={{ y: -2 }}
+              className="relative h-5 w-9 rounded-full transition-colors"
+              animate={{
+                backgroundColor: isEnabled ? "var(--primary)" : "var(--muted)",
+              }}
               transition={transitions.smooth}
             >
-              <Upload className="h-4 w-4" />
-            </motion.div>
-            <span>投稿</span>
-          </motion.button>
-
-          {/* User Info / Login Button - Login button visible on mobile */}
-          <AnimatePresence mode="wait">
-            {isAuthenticated ? (
               <motion.div
-                key="authenticated"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={transitions.gentle}
-                className="hidden md:flex items-center gap-2"
-              >
-                <motion.button
-                  type="button"
-                  variants={buttonVariants}
-                  initial="initial"
-                  whileHover="hover"
-                  whileTap="tap"
-                  onClick={() => router.push("/profile")}
-                  className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                >
-                  <motion.div
-                    whileHover={{ scale: 1.1 }}
-                    transition={transitions.smooth}
-                  >
-                    {user?.avatar ? (
-                      <img
-                        src={user.avatar}
-                        alt="头像"
-                        className="h-5 w-5 rounded-full object-cover"
-                      />
-                    ) : (
-                      <User className="h-4 w-4" />
-                    )}
-                  </motion.div>
-                  <span>{user?.nickname || user?.username}</span>
-                </motion.button>
-                <motion.button
-                  type="button"
-                  variants={buttonVariants}
-                  initial="initial"
-                  whileHover="hover"
-                  whileTap="tap"
-                  onClick={handleLogout}
-                  className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                >
-                  <motion.div
-                    whileHover={{ rotate: -90 }}
-                    transition={transitions.smooth}
-                  >
-                    <LogOut className="h-4 w-4" />
-                  </motion.div>
-                  <span>退出</span>
-                </motion.button>
-              </motion.div>
-            ) : (
-              <motion.button
-                key="login"
-                type="button"
-                variants={buttonVariants}
-                initial="initial"
-                whileHover="hover"
-                whileTap="tap"
-                onClick={() => setIsLoginFormOpen(true)}
-                className="rounded-full bg-linear-to-r from-red-500 to-pink-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:opacity-90 md:px-6 shrink-0"
-              >
-                <motion.div
-                  className="flex items-center gap-2"
-                  whileHover={{ gap: 3 }}
-                  transition={transitions.smooth}
-                >
-                  <Sparkles className="h-4 w-4" />
-                  <span>登录</span>
-                </motion.div>
-              </motion.button>
-            )}
-          </AnimatePresence>
+                className="absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm"
+                animate={{
+                  x: isEnabled ? 16 : 0,
+                }}
+                transition={transitions.smooth}
+              />
+            </motion.div>
+          </motion.button>
         </div>
       </div>
-
-      {/* Mobile Menu Sheet */}
-      <MobileMenuSheet
-        isOpen={isMobileMenuOpen}
-        onClose={() => setIsMobileMenuOpen(false)}
-      />
-
-      {/* Login Form */}
-      <LoginForm
-        isOpen={isLoginFormOpen}
-        onClose={() => setIsLoginFormOpen(false)}
-        onLogin={handleLogin}
-        onRegister={handleRegister}
-      />
     </header>
   );
 }

@@ -40,7 +40,7 @@ export default function SecondaryNav() {
     console.log("Selected category:", categoryId);
   }, []);
   return (
-    <div className="fixed left-0 right-0 top-16 z-30 bg-background/70 backdrop-blur-xl border-b border-border lg:left-20 xl:left-44">
+    <div className="fixed left-0 right-0 top-16 z-30 bg-background/70 backdrop-blur-xl border-b border-border">
       <div className="flex h-12 items-center gap-1 px-4 overflow-x-auto scrollbar-hide md:px-6">
         {loading ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">

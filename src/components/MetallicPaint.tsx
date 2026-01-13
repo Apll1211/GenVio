@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useEffect, useRef, useState } from 'react';
-import './MetallicPaint.css';
+import { useEffect, useRef, useState } from "react";
+import "./MetallicPaint.css";
 
 const defaultParams = {
   patternScale: 2,
@@ -9,189 +9,203 @@ const defaultParams = {
   edge: 1,
   patternBlur: 0.005,
   liquid: 0.07,
-  speed: 0.3
+  speed: 0.3,
 };
 
 export function parseLogoImage(file: File) {
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
 
-  return new Promise<{ imageData: ImageData; pngBlob: Blob }>((resolve, reject) => {
-    if (!file || !ctx) {
-      reject(new Error('Invalid file or context'));
-      return;
-    }
-
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = function () {
-      if (file.type === 'image/svg+xml') {
-        img.width = 1000;
-        img.height = 1000;
-      }
-
-      const MAX_SIZE = 1000;
-      const MIN_SIZE = 500;
-      let width = img.naturalWidth;
-      let height = img.naturalHeight;
-
-      if (width > MAX_SIZE || height > MAX_SIZE || width < MIN_SIZE || height < MIN_SIZE) {
-        if (width > height) {
-          if (width > MAX_SIZE) {
-            height = Math.round((height * MAX_SIZE) / width);
-            width = MAX_SIZE;
-          } else if (width < MIN_SIZE) {
-            height = Math.round((height * MIN_SIZE) / width);
-            width = MIN_SIZE;
-          }
-        } else {
-          if (height > MAX_SIZE) {
-            width = Math.round((width * MAX_SIZE) / height);
-            height = MAX_SIZE;
-          } else if (height < MIN_SIZE) {
-            width = Math.round((width * MIN_SIZE) / height);
-            height = MIN_SIZE;
-          }
-        }
-      }
-
-      canvas.width = width;
-      canvas.height = height;
-
-      const shapeCanvas = document.createElement('canvas');
-      shapeCanvas.width = width;
-      shapeCanvas.height = height;
-      const shapeCtx = shapeCanvas.getContext('2d');
-      if (!shapeCtx) {
-        reject(new Error('Failed to get shape context'));
+  return new Promise<{ imageData: ImageData; pngBlob: Blob }>(
+    (resolve, reject) => {
+      if (!file || !ctx) {
+        reject(new Error("Invalid file or context"));
         return;
       }
-      shapeCtx.drawImage(img, 0, 0, width, height);
 
-      const shapeImageData = shapeCtx.getImageData(0, 0, width, height);
-      const data = shapeImageData.data;
-      const shapeMask = new Array(width * height).fill(false);
-      for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-          const idx4 = (y * width + x) * 4;
-          const r = data[idx4];
-          const g = data[idx4 + 1];
-          const b = data[idx4 + 2];
-          const a = data[idx4 + 3];
-          shapeMask[y * width + x] = !((r === 255 && g === 255 && b === 255 && a === 255) || a === 0);
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        if (file.type === "image/svg+xml") {
+          img.width = 1000;
+          img.height = 1000;
         }
-      }
 
-      function inside(x: number, y: number) {
-        if (x < 0 || x >= width || y < 0 || y >= height) return false;
-        return shapeMask[y * width + x];
-      }
+        const MAX_SIZE = 1000;
+        const MIN_SIZE = 500;
+        let width = img.naturalWidth;
+        let height = img.naturalHeight;
 
-      const boundaryMask = new Array(width * height).fill(false);
-      for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-          const idx = y * width + x;
-          if (!shapeMask[idx]) continue;
-          let isBoundary = false;
-          for (let ny = y - 1; ny <= y + 1 && !isBoundary; ny++) {
-            for (let nx = x - 1; nx <= x + 1 && !isBoundary; nx++) {
-              if (!inside(nx, ny)) {
-                isBoundary = true;
-              }
+        if (
+          width > MAX_SIZE ||
+          height > MAX_SIZE ||
+          width < MIN_SIZE ||
+          height < MIN_SIZE
+        ) {
+          if (width > height) {
+            if (width > MAX_SIZE) {
+              height = Math.round((height * MAX_SIZE) / width);
+              width = MAX_SIZE;
+            } else if (width < MIN_SIZE) {
+              height = Math.round((height * MIN_SIZE) / width);
+              width = MIN_SIZE;
+            }
+          } else {
+            if (height > MAX_SIZE) {
+              width = Math.round((width * MAX_SIZE) / height);
+              height = MAX_SIZE;
+            } else if (height < MIN_SIZE) {
+              width = Math.round((width * MIN_SIZE) / height);
+              height = MIN_SIZE;
             }
           }
-          if (isBoundary) {
-            boundaryMask[idx] = true;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const shapeCanvas = document.createElement("canvas");
+        shapeCanvas.width = width;
+        shapeCanvas.height = height;
+        const shapeCtx = shapeCanvas.getContext("2d");
+        if (!shapeCtx) {
+          reject(new Error("Failed to get shape context"));
+          return;
+        }
+        shapeCtx.drawImage(img, 0, 0, width, height);
+
+        const shapeImageData = shapeCtx.getImageData(0, 0, width, height);
+        const data = shapeImageData.data;
+        const shapeMask = new Array(width * height).fill(false);
+        for (let y = 0; y < height; y++) {
+          for (let x = 0; x < width; x++) {
+            const idx4 = (y * width + x) * 4;
+            const r = data[idx4];
+            const g = data[idx4 + 1];
+            const b = data[idx4 + 2];
+            const a = data[idx4 + 3];
+            shapeMask[y * width + x] = !(
+              (r === 255 && g === 255 && b === 255 && a === 255) ||
+              a === 0
+            );
           }
         }
-      }
 
-      const interiorMask = new Array(width * height).fill(false);
-      for (let y = 1; y < height - 1; y++) {
-        for (let x = 1; x < width - 1; x++) {
-          const idx = y * width + x;
-          if (
-            shapeMask[idx] &&
-            shapeMask[idx - 1] &&
-            shapeMask[idx + 1] &&
-            shapeMask[idx - width] &&
-            shapeMask[idx + width]
-          ) {
-            interiorMask[idx] = true;
-          }
+        function inside(x: number, y: number) {
+          if (x < 0 || x >= width || y < 0 || y >= height) return false;
+          return shapeMask[y * width + x];
         }
-      }
 
-      const u = new Float32Array(width * height).fill(0);
-      const newU = new Float32Array(width * height).fill(0);
-      const C = 0.01;
-      const ITERATIONS = 300;
-
-      function getU(x: number, y: number, arr: Float32Array) {
-        if (x < 0 || x >= width || y < 0 || y >= height) return 0;
-        if (!shapeMask[y * width + x]) return 0;
-        return arr[y * width + x];
-      }
-
-      for (let iter = 0; iter < ITERATIONS; iter++) {
+        const boundaryMask = new Array(width * height).fill(false);
         for (let y = 0; y < height; y++) {
           for (let x = 0; x < width; x++) {
             const idx = y * width + x;
-            if (!shapeMask[idx] || boundaryMask[idx]) {
-              newU[idx] = 0;
-              continue;
+            if (!shapeMask[idx]) continue;
+            let isBoundary = false;
+            for (let ny = y - 1; ny <= y + 1 && !isBoundary; ny++) {
+              for (let nx = x - 1; nx <= x + 1 && !isBoundary; nx++) {
+                if (!inside(nx, ny)) {
+                  isBoundary = true;
+                }
+              }
             }
-            const sumN = getU(x + 1, y, u) + getU(x - 1, y, u) + getU(x, y + 1, u) + getU(x, y - 1, u);
-            newU[idx] = (C + sumN) / 4;
+            if (isBoundary) {
+              boundaryMask[idx] = true;
+            }
           }
         }
-        u.set(newU);
-      }
 
-      let maxVal = 0;
-      for (let i = 0; i < width * height; i++) {
-        if (u[i] > maxVal) maxVal = u[i];
-      }
-      const alpha = 2.0;
-      const outImg = ctx.createImageData(width, height);
-      for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-          const idx = y * width + x;
-          const px = idx * 4;
-          if (!shapeMask[idx]) {
-            outImg.data[px] = 255;
-            outImg.data[px + 1] = 255;
-            outImg.data[px + 2] = 255;
-            outImg.data[px + 3] = 255;
-          } else {
-            const raw = u[idx] / maxVal;
-            const remapped = Math.pow(raw, alpha);
-            const gray = 255 * (1 - remapped);
-            outImg.data[px] = gray;
-            outImg.data[px + 1] = gray;
-            outImg.data[px + 2] = gray;
-            outImg.data[px + 3] = 255;
+        const interiorMask = new Array(width * height).fill(false);
+        for (let y = 1; y < height - 1; y++) {
+          for (let x = 1; x < width - 1; x++) {
+            const idx = y * width + x;
+            if (
+              shapeMask[idx] &&
+              shapeMask[idx - 1] &&
+              shapeMask[idx + 1] &&
+              shapeMask[idx - width] &&
+              shapeMask[idx + width]
+            ) {
+              interiorMask[idx] = true;
+            }
           }
         }
-      }
 
-      ctx.putImageData(outImg, 0, 0);
+        const u = new Float32Array(width * height).fill(0);
+        const newU = new Float32Array(width * height).fill(0);
+        const C = 0.01;
+        const ITERATIONS = 300;
 
-      canvas.toBlob(blob => {
-        if (!blob) {
-          reject(new Error('Failed to create PNG blob'));
-          return;
+        function getU(x: number, y: number, arr: Float32Array) {
+          if (x < 0 || x >= width || y < 0 || y >= height) return 0;
+          if (!shapeMask[y * width + x]) return 0;
+          return arr[y * width + x];
         }
-        resolve({
-          imageData: outImg,
-          pngBlob: blob
-        });
-      }, 'image/png');
-    };
 
-    img.onerror = () => reject(new Error('Failed to load image'));
-    img.src = URL.createObjectURL(file);
-  });
+        for (let iter = 0; iter < ITERATIONS; iter++) {
+          for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+              const idx = y * width + x;
+              if (!shapeMask[idx] || boundaryMask[idx]) {
+                newU[idx] = 0;
+                continue;
+              }
+              const sumN =
+                getU(x + 1, y, u) +
+                getU(x - 1, y, u) +
+                getU(x, y + 1, u) +
+                getU(x, y - 1, u);
+              newU[idx] = (C + sumN) / 4;
+            }
+          }
+          u.set(newU);
+        }
+
+        let maxVal = 0;
+        for (let i = 0; i < width * height; i++) {
+          if (u[i] > maxVal) maxVal = u[i];
+        }
+        const alpha = 2.0;
+        const outImg = ctx.createImageData(width, height);
+        for (let y = 0; y < height; y++) {
+          for (let x = 0; x < width; x++) {
+            const idx = y * width + x;
+            const px = idx * 4;
+            if (!shapeMask[idx]) {
+              outImg.data[px] = 255;
+              outImg.data[px + 1] = 255;
+              outImg.data[px + 2] = 255;
+              outImg.data[px + 3] = 255;
+            } else {
+              const raw = u[idx] / maxVal;
+              const remapped = raw ** alpha;
+              const gray = 255 * (1 - remapped);
+              outImg.data[px] = gray;
+              outImg.data[px + 1] = gray;
+              outImg.data[px + 2] = gray;
+              outImg.data[px + 3] = 255;
+            }
+          }
+        }
+
+        ctx.putImageData(outImg, 0, 0);
+
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            reject(new Error("Failed to create PNG blob"));
+            return;
+          }
+          resolve({
+            imageData: outImg,
+            pngBlob: blob,
+          });
+        }, "image/png");
+      };
+
+      img.onerror = () => reject(new Error("Failed to load image"));
+      img.src = URL.createObjectURL(file);
+    },
+  );
 }
 
 const vertexShaderSource = `#version 300 es
@@ -364,10 +378,15 @@ interface MetallicPaintProps {
   params?: typeof defaultParams;
 }
 
-export default function MetallicPaint({ imageData, params = defaultParams }: MetallicPaintProps) {
+export default function MetallicPaint({
+  imageData,
+  params = defaultParams,
+}: MetallicPaintProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [gl, setGl] = useState<WebGL2RenderingContext | null>(null);
-  const [uniforms, setUniforms] = useState<Record<string, WebGLUniformLocation>>({});
+  const [uniforms, setUniforms] = useState<
+    Record<string, WebGLUniformLocation>
+  >({});
   const totalAnimationTime = useRef(0);
   const lastRenderTime = useRef(0);
 
@@ -384,18 +403,28 @@ export default function MetallicPaint({ imageData, params = defaultParams }: Met
   useEffect(() => {
     function initShader() {
       const canvas = canvasRef.current;
-      console.log('MetallicPaint: Initializing WebGL...', { canvas, imageData });
-      const glContext = canvas?.getContext('webgl2', {
+      console.log("MetallicPaint: Initializing WebGL...", {
+        canvas,
+        imageData,
+      });
+      const glContext = canvas?.getContext("webgl2", {
         antialias: true,
-        alpha: true
+        alpha: true,
       });
       if (!canvas || !glContext) {
-        console.error('MetallicPaint: Failed to get WebGL2 context', { canvas, glContext });
+        console.error("MetallicPaint: Failed to get WebGL2 context", {
+          canvas,
+          glContext,
+        });
         return;
       }
-      console.log('MetallicPaint: WebGL2 context obtained successfully');
+      console.log("MetallicPaint: WebGL2 context obtained successfully");
 
-      function createShader(gl: WebGL2RenderingContext, sourceCode: string, type: number) {
+      function createShader(
+        gl: WebGL2RenderingContext,
+        sourceCode: string,
+        type: number,
+      ) {
         const shader = gl.createShader(type);
         if (!shader) {
           return null;
@@ -405,7 +434,10 @@ export default function MetallicPaint({ imageData, params = defaultParams }: Met
         gl.compileShader(shader);
 
         if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-          console.error('An error occurred compiling the shaders: ' + gl.getShaderInfoLog(shader));
+          console.error(
+            "An error occurred compiling the shaders: " +
+              gl.getShaderInfoLog(shader),
+          );
           gl.deleteShader(shader);
           return null;
         }
@@ -413,8 +445,16 @@ export default function MetallicPaint({ imageData, params = defaultParams }: Met
         return shader;
       }
 
-      const vertexShader = createShader(glContext, vertexShaderSource, glContext.VERTEX_SHADER);
-      const fragmentShader = createShader(glContext, liquidFragSource, glContext.FRAGMENT_SHADER);
+      const vertexShader = createShader(
+        glContext,
+        vertexShaderSource,
+        glContext.VERTEX_SHADER,
+      );
+      const fragmentShader = createShader(
+        glContext,
+        liquidFragSource,
+        glContext.FRAGMENT_SHADER,
+      );
       const program = glContext.createProgram();
       if (!program || !vertexShader || !fragmentShader) {
         return;
@@ -425,15 +465,21 @@ export default function MetallicPaint({ imageData, params = defaultParams }: Met
       glContext.linkProgram(program);
 
       if (!glContext.getProgramParameter(program, glContext.LINK_STATUS)) {
-        console.error('Unable to initialize the shader program: ' + glContext.getProgramInfoLog(program));
+        console.error(
+          "Unable to initialize the shader program: " +
+            glContext.getProgramInfoLog(program),
+        );
         return null;
       }
 
       function getUniforms(program: WebGLProgram, gl: WebGL2RenderingContext) {
-        let uniforms: Record<string, WebGLUniformLocation> = {};
-        let uniformCount = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
+        const uniforms: Record<string, WebGLUniformLocation> = {};
+        const uniformCount = gl.getProgramParameter(
+          program,
+          gl.ACTIVE_UNIFORMS,
+        );
         for (let i = 0; i < uniformCount; i++) {
-          let uniformName = gl.getActiveUniform(program, i)?.name;
+          const uniformName = gl.getActiveUniform(program, i)?.name;
           if (!uniformName) continue;
           const location = gl.getUniformLocation(program, uniformName);
           if (location) {
@@ -448,18 +494,32 @@ export default function MetallicPaint({ imageData, params = defaultParams }: Met
       const vertices = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]);
       const vertexBuffer = glContext.createBuffer();
       glContext.bindBuffer(glContext.ARRAY_BUFFER, vertexBuffer);
-      glContext.bufferData(glContext.ARRAY_BUFFER, vertices, glContext.STATIC_DRAW);
+      glContext.bufferData(
+        glContext.ARRAY_BUFFER,
+        vertices,
+        glContext.STATIC_DRAW,
+      );
 
       glContext.useProgram(program);
 
-      const positionLocation = glContext.getAttribLocation(program, 'a_position');
+      const positionLocation = glContext.getAttribLocation(
+        program,
+        "a_position",
+      );
       glContext.enableVertexAttribArray(positionLocation);
 
       glContext.bindBuffer(glContext.ARRAY_BUFFER, vertexBuffer);
-      glContext.vertexAttribPointer(positionLocation, 2, glContext.FLOAT, false, 0, 0);
+      glContext.vertexAttribPointer(
+        positionLocation,
+        2,
+        glContext.FLOAT,
+        false,
+        0,
+        0,
+      );
 
       setGl(glContext);
-      console.log('MetallicPaint: WebGL initialized successfully');
+      console.log("MetallicPaint: WebGL initialized successfully");
     }
 
     initShader();
@@ -508,10 +568,10 @@ export default function MetallicPaint({ imageData, params = defaultParams }: Met
       const container = canvasEl.parentElement;
       const containerWidth = container?.clientWidth || 28;
       const containerHeight = container?.clientHeight || 28;
-      
+
       // 使用容器尺寸，但保持最小尺寸以保证渲染质量
       const side = Math.max(containerWidth, containerHeight, 100);
-      
+
       canvasEl.width = side * devicePixelRatio;
       canvasEl.height = side * devicePixelRatio;
       gl.viewport(0, 0, canvasEl.height, canvasEl.height);
@@ -520,12 +580,12 @@ export default function MetallicPaint({ imageData, params = defaultParams }: Met
     }
 
     resizeCanvas();
-    
+
     // 使用 ResizeObserver 监听容器尺寸变化
     const resizeObserver = new ResizeObserver(() => {
       resizeCanvas();
     });
-    
+
     const container = canvasEl.parentElement;
     if (container) {
       resizeObserver.observe(container);
@@ -538,14 +598,16 @@ export default function MetallicPaint({ imageData, params = defaultParams }: Met
 
   useEffect(() => {
     if (!gl || !uniforms) {
-      console.log('MetallicPaint: Texture upload skipped - gl or uniforms not ready');
+      console.log(
+        "MetallicPaint: Texture upload skipped - gl or uniforms not ready",
+      );
       return;
     }
 
-    console.log('MetallicPaint: Uploading texture...', {
+    console.log("MetallicPaint: Uploading texture...", {
       imageDataWidth: imageData?.width,
       imageDataHeight: imageData?.height,
-      dataSize: imageData?.data?.length
+      dataSize: imageData?.data?.length,
     });
 
     const existingTexture = gl.getParameter(gl.TEXTURE_BINDING_2D);
@@ -574,13 +636,13 @@ export default function MetallicPaint({ imageData, params = defaultParams }: Met
         0,
         gl.RGBA,
         gl.UNSIGNED_BYTE,
-        imageData?.data
+        imageData?.data,
       );
 
       gl.uniform1i(uniforms.u_image_texture, 0);
-      console.log('MetallicPaint: Texture uploaded successfully');
+      console.log("MetallicPaint: Texture uploaded successfully");
     } catch (e) {
-      console.error('MetallicPaint: Error uploading texture:', e);
+      console.error("MetallicPaint: Error uploading texture:", e);
     }
 
     return () => {

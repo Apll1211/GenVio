@@ -98,56 +98,7 @@ function initDatabase(): Database.Database {
       console.log("User profile columns check skipped:", error);
     }
 
-    // 视频表
-    _db.exec(`
-      CREATE TABLE IF NOT EXISTS videos (
-        id TEXT PRIMARY KEY,
-        title TEXT NOT NULL,
-        author TEXT NOT NULL,
-        author_id TEXT,
-        description TEXT,
-        thumbnail TEXT,
-        video_url TEXT NOT NULL,
-        duration TEXT NOT NULL,
-        likes INTEGER DEFAULT 0,
-        comments INTEGER DEFAULT 0,
-        shares INTEGER DEFAULT 0,
-        views INTEGER DEFAULT 0,
-        status TEXT DEFAULT '已发布',
-        file_path TEXT,
-        folder_path TEXT,
-        tags TEXT,
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL,
-        FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE SET NULL
-      )
-    `);
-
-    // 检查并添加 tags 字段（用于已存在的数据库）
-    try {
-      const columns = _db.prepare("PRAGMA table_info(videos)").all() as any[];
-      const hasTagsColumn = columns.some((col: any) => col.name === "tags");
-      if (!hasTagsColumn) {
-        _db.exec("ALTER TABLE videos ADD COLUMN tags TEXT");
-        console.log("Added tags column to videos table");
-      }
-    } catch (error) {
-      console.log("Tags column check skipped:", error);
-    }
-
-    // 检查并添加 author_id 字段（用于已存在的数据库）
-    try {
-      const columns = _db.prepare("PRAGMA table_info(videos)").all() as any[];
-      const hasAuthorIdColumn = columns.some((col: any) => col.name === "author_id");
-      if (!hasAuthorIdColumn) {
-        _db.exec("ALTER TABLE videos ADD COLUMN author_id TEXT");
-        console.log("Added author_id column to videos table");
-      }
-    } catch (error) {
-      console.log("Author_id column check skipped:", error);
-    }
-
-    // 分类表
+    // 文章分类表
     _db.exec(`
       CREATE TABLE IF NOT EXISTS categories (
         id TEXT PRIMARY KEY,
@@ -216,97 +167,62 @@ function initDatabase(): Database.Database {
       console.log("Label column modification skipped:", error);
     }
 
-    // 直播源表
+    // 文章表（用于博客）
     _db.exec(`
-      CREATE TABLE IF NOT EXISTS live_streams (
+      CREATE TABLE IF NOT EXISTS articles (
         id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        url TEXT NOT NULL,
-        group_title TEXT,
-        logo TEXT,
-        tvg_id TEXT,
-        tvg_name TEXT,
-        tvg_logo TEXT,
-        active INTEGER DEFAULT 1,
+        title TEXT NOT NULL,
+        author TEXT NOT NULL,
+        author_id TEXT,
+        description TEXT,
+        content TEXT,
+        thumbnail TEXT,
+        category_id TEXT,
+        tags TEXT,
+        views INTEGER DEFAULT 0,
+        likes INTEGER DEFAULT 0,
+        status TEXT DEFAULT '已发布',
         created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE SET NULL,
+        FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
       )
     `);
 
-    // 后台管理菜单表
-    _db.exec(`
-      CREATE TABLE IF NOT EXISTS admin_menu_items (
-        id TEXT PRIMARY KEY,
-        key TEXT NOT NULL UNIQUE,
-        label TEXT NOT NULL,
-        icon_name TEXT NOT NULL,
-        sort_order INTEGER DEFAULT 0,
-        active INTEGER DEFAULT 1,
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL
-      )
-    `);
+    // 检查并添加文章表字段（用于已存在的数据库）
+    try {
+      const columns = _db.prepare("PRAGMA table_info(articles)").all() as any[];
+      const hasContentColumn = columns.some(
+        (col: any) => col.name === "content",
+      );
+      const hasTagsColumn = columns.some((col: any) => col.name === "tags");
+      const hasCategoryIdColumn = columns.some(
+        (col: any) => col.name === "category_id",
+      );
 
-    // 最近操作记录表（用于自动备份和撤销）
-    _db.exec(`
-      CREATE TABLE IF NOT EXISTS recent_operations (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        table_name TEXT NOT NULL,
-        operation_type TEXT NOT NULL,
-        record_id TEXT,
-        old_data TEXT,
-        created_at TEXT NOT NULL
-      )
-    `);
+      if (!hasContentColumn) {
+        _db.exec("ALTER TABLE articles ADD COLUMN content TEXT");
+        console.log("Added content column to articles table");
+      }
+      if (!hasTagsColumn) {
+        _db.exec("ALTER TABLE articles ADD COLUMN tags TEXT");
+        console.log("Added tags column to articles table");
+      }
+      if (!hasCategoryIdColumn) {
+        _db.exec("ALTER TABLE articles ADD COLUMN category_id TEXT");
+        console.log("Added category_id column to articles table");
+      }
+    } catch (error) {
+      console.log("Article columns check skipped:", error);
+    }
 
-    // 视频点赞表
-    _db.exec(`
-      CREATE TABLE IF NOT EXISTS video_likes (
-        id TEXT PRIMARY KEY,
-        video_id TEXT NOT NULL,
-        user_id TEXT NOT NULL,
-        user_nickname TEXT,
-        created_at TEXT NOT NULL,
-        UNIQUE(video_id, user_id)
-      )
-    `);
-
-    // 创建索引以提高查询性能
-    _db.exec(`
-      CREATE INDEX IF NOT EXISTS idx_recent_operations_table
-      ON recent_operations(table_name, created_at DESC);
-    `);
-
-    _db.exec(`
-      CREATE INDEX IF NOT EXISTS idx_video_likes_video_id
-      ON video_likes(video_id);
-    `);
-
-    _db.exec(`
-      CREATE INDEX IF NOT EXISTS idx_video_likes_user_id
-      ON video_likes(user_id);
-    `);
-
-    // 初始化默认分类数据
+    // 初始化默认博客分类数据
     const defaultCategories = [
-      { id: "all", label: "全部", sort_order: 0 },
-      { id: "course", label: "公开课", sort_order: 1 },
-      { id: "game", label: "游戏", sort_order: 2 },
-      { id: "anime", label: "二次元", sort_order: 3 },
-      { id: "music", label: "音乐", sort_order: 4 },
-      { id: "movie", label: "影视", sort_order: 5 },
-      { id: "food", label: "美食", sort_order: 6 },
-      { id: "knowledge", label: "知识", sort_order: 7 },
-      { id: "theater", label: "小剧场", sort_order: 8 },
-      { id: "vlog", label: "生活vlog", sort_order: 9 },
-      { id: "sports", label: "体育", sort_order: 10 },
-      { id: "travel", label: "旅行", sort_order: 11 },
-      { id: "parenting", label: "亲子", sort_order: 12 },
-      { id: "animals", label: "动物", sort_order: 13 },
-      { id: "agriculture", label: "三农", sort_order: 14 },
-      { id: "cars", label: "汽车", sort_order: 15 },
-      { id: "beauty", label: "美妆", sort_order: 16 },
-      { id: "fashion", label: "穿搭", sort_order: 17 },
+      { id: "tech", label: "技术", sort_order: 0 },
+      { id: "life", label: "生活", sort_order: 1 },
+      { id: "thoughts", label: "思考", sort_order: 2 },
+      { id: "tutorial", label: "教程", sort_order: 3 },
+      { id: "notes", label: "笔记", sort_order: 4 },
     ];
 
     // 检查是否已有分类数据
@@ -326,102 +242,38 @@ function initDatabase(): Database.Database {
       console.log("Initialized default categories");
     }
 
-    // 初始化默认侧边栏配置数据
+    // 初始化默认侧边栏配置数据（博客专用）
     const defaultSidebarItems = [
       {
-        id: "featured",
-        label: "精选",
+        id: "home",
+        label: "首页",
         icon_name: "Home",
         path: "/",
         sort_order: 0,
         item_type: "button",
       },
       {
-        id: "recommend",
-        label: "推荐",
+        id: "categories",
+        label: "分类",
         icon_name: "Compass",
-        path: "/recommend",
+        path: "/categories",
         sort_order: 1,
         item_type: "button",
       },
       {
-        id: "ai-douyin",
-        label: "AI GenVio",
+        id: "archive",
+        label: "归档",
         icon_name: "Sparkles",
-        path: "/ai",
+        path: "/archive",
         sort_order: 2,
         item_type: "button",
       },
       {
-        id: "creative",
-        label: "创意",
+        id: "about",
+        label: "关于",
         icon_name: "Palette",
-        path: "/creative",
+        path: "/about",
         sort_order: 3,
-        item_type: "button",
-      },
-      {
-        id: "divider-1",
-        label: "",
-        icon_name: null,
-        path: null,
-        sort_order: 4,
-        item_type: "divider",
-      },
-      {
-        id: "following",
-        label: "关注",
-        icon_name: "Heart",
-        path: "/follow",
-        sort_order: 5,
-        item_type: "button",
-      },
-      {
-        id: "friends",
-        label: "朋友",
-        icon_name: "Users",
-        path: "/friends",
-        sort_order: 6,
-        item_type: "button",
-      },
-      {
-        id: "profile",
-        label: "我的",
-        icon_name: "User",
-        path: "/profile",
-        sort_order: 7,
-        item_type: "button",
-      },
-      {
-        id: "divider-2",
-        label: "",
-        icon_name: null,
-        path: null,
-        sort_order: 8,
-        item_type: "divider",
-      },
-      {
-        id: "live",
-        label: "直播",
-        icon_name: "Radio",
-        path: "/live",
-        sort_order: 9,
-        item_type: "button",
-      },
-      {
-        id: "cinema",
-        label: "放映厅",
-        icon_name: "Film",
-        path: "/cinema",
-        sort_order: 10,
-        item_type: "button",
-      },
-      {
-        id: "drama",
-        label: "短剧",
-        icon_name: "PlayCircle",
-        path: "/drama",
-        sort_order: 11,
         item_type: "button",
       },
     ];
@@ -452,76 +304,7 @@ function initDatabase(): Database.Database {
       console.log("Initialized default sidebar items");
     }
 
-    // 初始化默认后台管理菜单数据
-    const defaultAdminMenuItems = [
-      {
-        id: "admin-menu-videos",
-        key: "videos",
-        label: "视频管理",
-        icon_name: "video",
-        sort_order: 0,
-      },
-      {
-        id: "admin-menu-users",
-        key: "users",
-        label: "用户管理",
-        icon_name: "user",
-        sort_order: 1,
-      },
-      {
-        id: "admin-menu-categories",
-        key: "categories",
-        label: "分类管理",
-        icon_name: "database",
-        sort_order: 2,
-      },
-      {
-        id: "admin-menu-sidebar",
-        key: "sidebar",
-        label: "侧边栏管理",
-        icon_name: "menu",
-        sort_order: 3,
-      },
-      {
-        id: "admin-menu-livestreams",
-        key: "livestreams",
-        label: "直播源管理",
-        icon_name: "radio",
-        sort_order: 4,
-      },
-      {
-        id: "admin-menu-jsonserver",
-        key: "jsonserver",
-        label: "JSON Server",
-        icon_name: "database",
-        sort_order: 5,
-      },
-    ];
-
-    // 检查是否已有后台管理菜单数据
-    const adminMenuCount = _db
-      .prepare("SELECT COUNT(*) as count FROM admin_menu_items")
-      .get() as { count: number };
-    if (adminMenuCount.count === 0) {
-      const insertAdminMenuItem = _db.prepare(`
-        INSERT INTO admin_menu_items (id, key, label, icon_name, sort_order, active, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, 1, ?, ?)
-      `);
-
-      const now = getCurrentTime();
-      defaultAdminMenuItems.forEach((item) => {
-        insertAdminMenuItem.run(
-          item.id,
-          item.key,
-          item.label,
-          item.icon_name,
-          item.sort_order,
-          now,
-          now,
-        );
-      });
-      console.log("Initialized default admin menu items");
-    }
+    // 移除后台管理菜单相关代码（博客不需要）
 
     console.log("Database initialized successfully", { dbPath });
     return _db;
