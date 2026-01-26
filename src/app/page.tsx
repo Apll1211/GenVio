@@ -1,5 +1,4 @@
 import Header from "@/components/layout/Header";
-import CategoryNav from "@/components/layout/CategoryNav";
 import PrismBackground from "@/components/PrismBackground";
 
 export default function Home() {
@@ -24,11 +23,7 @@ export default function Home() {
       {/* Content */}
       <div className="relative z-10 min-h-screen bg-background/60 backdrop-blur-md">
         <Header />
-        {/* 只在桌面端显示二级导航 */}
-        <div className="hidden md:block">
-          <CategoryNav />
-        </div>
-        <div className="flex-1 pt-28 md:pt-20">
+        <div className="flex-1 pt-20">
           {/* 博客内容区域 */}
           <div className="px-4">
             <div className="text-center py-12">

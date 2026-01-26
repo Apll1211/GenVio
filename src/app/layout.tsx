@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import SplashCursor from "@/components/SplashCursor";
-import { Toaster } from "@/components/ui/sonner";
-import { AuthProvider } from "@/context/AuthContext";
 import { SplashCursorProvider } from "@/context/SplashCursorContext";
 
 export const metadata: Metadata = {
@@ -41,10 +39,9 @@ export default function RootLayout({
         <SplashCursorProvider>
           <SplashCursor />
           <Providers>
-            <AuthProvider>{children}</AuthProvider>
+            {children}
           </Providers>
         </SplashCursorProvider>
-        <Toaster />
       </body>
     </html>
   );
