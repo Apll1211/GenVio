@@ -19,7 +19,7 @@ export default function Home() {
           whiteGlow={2.0}
         />
       </div>
-      
+
       {/* Content */}
       <div className="relative z-10 min-h-screen bg-background/60 backdrop-blur-md">
         <Header />
@@ -27,7 +27,9 @@ export default function Home() {
           {/* 博客内容区域 */}
           <div className="px-4">
             <div className="text-center py-12">
-              <h1 className="text-3xl font-bold mb-4 text-foreground drop-shadow-lg">欢迎来到我的主页</h1>
+              <h1 className="text-3xl font-bold mb-4 text-foreground drop-shadow-lg">
+                Welcome To My Homepage
+              </h1>
               <p className="text-foreground/80 drop-shadow-md">正在施工中...</p>
             </div>
           </div>

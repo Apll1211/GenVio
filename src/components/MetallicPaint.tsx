@@ -80,9 +80,6 @@ export function parseLogoImage(file: File) {
         for (let y = 0; y < height; y++) {
           for (let x = 0; x < width; x++) {
             const idx4 = (y * width + x) * 4;
-            const r = data[idx4];
-            const g = data[idx4 + 1];
-            const b = data[idx4 + 2];
             const a = data[idx4 + 3];
             // 修改：只将完全透明或纯白色的像素视为背景
             // 对于SVG图标，我们需要保留所有非透明像素

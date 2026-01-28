@@ -38,9 +38,7 @@ export default function RootLayout({
       >
         <SplashCursorProvider>
           <SplashCursor />
-          <Providers>
-            {children}
-          </Providers>
+          <Providers>{children}</Providers>
         </SplashCursorProvider>
       </body>
     </html>
