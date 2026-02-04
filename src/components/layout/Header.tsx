@@ -1,11 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import {
-  Moon,
-  Sparkles,
-  Sun,
-} from "lucide-react";
+import { Moon, Sparkles, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
 import MetallicPaint, { parseLogoImage } from "@/components/MetallicPaint";
 import ShinyText from "@/components/ShinyText";
@@ -14,23 +10,18 @@ import { useTheme } from "@/context/ThemeContext";
 
 export default function Header() {
   const { isEnabled, toggleEnabled } = useSplashCursor();
-  const { theme, isDark, mode, toggleTheme } = useTheme();
+  const { isDark, mode, toggleTheme } = useTheme();
   const [imageData, setImageData] = useState<ImageData | null>(null);
 
   // 加载 logo.svg 并解析为 ImageData
   useEffect(() => {
     async function loadLogoImage() {
-      try {
-        const response = await fetch("/logo.svg");
-        const blob = await response.blob();
-        const file = new File([blob], "logo.svg", { type: blob.type });
-        const parsedData = await parseLogoImage(file);
-        setImageData(parsedData?.imageData ?? null);
-      } catch (err) {
-        // Silent fail
-      }
+      const response = await fetch("/logo.svg");
+      const blob = await response.blob();
+      const file = new File([blob], "logo.svg", { type: blob.type });
+      const parsedData = await parseLogoImage(file);
+      setImageData(parsedData?.imageData ?? null);
     }
-
     loadLogoImage();
   }, []);
 
@@ -132,9 +123,9 @@ export default function Header() {
               transition={{ duration: 0.2 }}
             >
               <motion.div
-                className="absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm"
+                className="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow-sm"
                 animate={{
-                  x: isEnabled ? 16 : 0,
+                  x: isEnabled ? 18 : 0,
                 }}
                 transition={{ duration: 0.2 }}
               />

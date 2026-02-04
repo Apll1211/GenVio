@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSplashCursor } from "@/context/SplashCursorContext";
 
 interface ColorRGB {
@@ -88,7 +88,7 @@ export default function SplashCursor({
   // 检测404页面
   useEffect(() => {
     if (!isMounted) return;
-    
+
     const checkNotFoundPage = () => {
       const notFoundElement = document.querySelector(".not-found-page");
       setIsNotFoundPage(!!notFoundElement);

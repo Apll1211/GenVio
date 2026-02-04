@@ -1,8 +1,8 @@
 "use client";
 
-import * as React from "react";
-import { useTheme } from "@/context/ThemeContext";
+import type * as React from "react";
 import { Toaster as SonnerToaster } from "sonner";
+import { useTheme } from "@/context/ThemeContext";
 
 function Toaster({ ...props }: React.ComponentProps<typeof SonnerToaster>) {
   const { theme } = useTheme();

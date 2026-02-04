@@ -1,4 +1,9 @@
-import { motion, useMotionValue, useAnimationFrame, useTransform } from "motion/react";
+import {
+  motion,
+  useAnimationFrame,
+  useMotionValue,
+  useTransform,
+} from "motion/react";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -38,7 +43,7 @@ const ShinyText: React.FC<ShinyTextProps> = ({
   const animationDuration = speed * 1000;
   const delayDuration = delay * 1000;
 
-  useAnimationFrame(time => {
+  useAnimationFrame((time) => {
     if (disabled || isPaused) {
       lastTimeRef.current = null;
       return;
@@ -98,7 +103,10 @@ const ShinyText: React.FC<ShinyTextProps> = ({
   }, [direction, progress]);
 
   // Transform: p=0 -> 150% (shine off right), p=100 -> -50% (shine off left)
-  const backgroundPosition = useTransform(progress, p => `${150 - p * 2}% center`);
+  const backgroundPosition = useTransform(
+    progress,
+    (p) => `${150 - p * 2}% center`,
+  );
 
   const handleMouseEnter = useCallback(() => {
     if (pauseOnHover) setIsPaused(true);
@@ -110,10 +118,10 @@ const ShinyText: React.FC<ShinyTextProps> = ({
 
   const gradientStyle: React.CSSProperties = {
     backgroundImage: `linear-gradient(${spread}deg, ${color} 0%, ${color} 35%, ${shineColor} 50%, ${color} 65%, ${color} 100%)`,
-    backgroundSize: '200% auto',
-    WebkitBackgroundClip: 'text',
-    backgroundClip: 'text',
-    WebkitTextFillColor: 'transparent'
+    backgroundSize: "200% auto",
+    WebkitBackgroundClip: "text",
+    backgroundClip: "text",
+    WebkitTextFillColor: "transparent",
   };
 
   return (

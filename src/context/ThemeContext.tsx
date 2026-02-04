@@ -31,7 +31,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     if (mode !== "auto") return;
 
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    
+
     const updateTheme = () => {
       const isDark = mediaQuery.matches;
       const newTheme: Theme = isDark ? "dark" : "light";
@@ -51,10 +51,10 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   // 根据主题设置更新 DOM
   useEffect(() => {
     const root = window.document.documentElement;
-    
+
     // 移除所有主题类
     root.classList.remove("light", "dark");
-    
+
     // 添加对应主题类
     if (theme === "dark") {
       root.classList.add("dark");
@@ -77,14 +77,16 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   const isDark = theme === "dark";
 
   return (
-    <ThemeContext.Provider value={{
-      theme,
-      isDark,
-      systemTheme,
-      mode,
-      toggleTheme,
-      setMode
-    }}>
+    <ThemeContext.Provider
+      value={{
+        theme,
+        isDark,
+        systemTheme,
+        mode,
+        toggleTheme,
+        setMode,
+      }}
+    >
       {children}
     </ThemeContext.Provider>
   );
