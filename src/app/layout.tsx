@@ -18,6 +18,7 @@ export default function RootLayout({
     <html lang="zh-CN" suppressHydrationWarning>
       <head>
         <link rel="stylesheet" href="/dingtalk-jinbuti/result.css" />
+        <link rel="stylesheet" href="/Lemi/result.css" />
         <style>
           {`
             @font-face {

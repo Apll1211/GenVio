@@ -1,5 +1,6 @@
 import Header from "@/components/layout/Header";
 import PrismBackground from "@/components/PrismBackground";
+import Shuffle from "@/components/Shuffle";
 
 export default function Home() {
   return (
@@ -27,10 +28,19 @@ export default function Home() {
           {/* 博客内容区域 */}
           <div className="px-4">
             <div className="text-center py-12">
-              <h1 className="text-3xl font-bold mb-4 text-foreground drop-shadow-lg">
-                Welcome To My Homepage
-              </h1>
-              <p className="text-foreground/80 drop-shadow-md">正在施工中...</p>
+              <Shuffle
+                text="Welcome To My Homepage"
+                tag="h1"
+                className="text-[2.625rem] font-bold mb-4 text-gray-500 drop-shadow-lg font-sans"
+                shuffleDirection="down"
+                duration={0.35}
+                animationMode="evenodd"
+                shuffleTimes={1}
+                ease="power3.out"
+                stagger={0.03}
+                triggerOnce={true}
+                triggerOnHover
+              />
             </div>
           </div>
         </div>
