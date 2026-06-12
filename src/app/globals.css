@@ -235,6 +235,20 @@
     transform: scale(0.95);
     color: #2563eb;
   }
+
+  /* Shiny Text Animation */
+  @keyframes shiny-text {
+    0% {
+      background-position: 150% center;
+    }
+    100% {
+      background-position: -50% center;
+    }
+  }
+
+  .animate-shiny-text {
+    animation: shiny-text linear infinite;
+  }
 }
 
 /* Glitch Text Animation */

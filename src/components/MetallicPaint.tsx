@@ -386,6 +386,7 @@ export default function MetallicPaint({
 }: MetallicPaintProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [gl, setGl] = useState<WebGL2RenderingContext | null>(null);
+  const [isHovered, setIsHovered] = useState(false);
   const [uniforms, setUniforms] = useState<
     Record<string, WebGLUniformLocation>
   >({});
@@ -396,124 +397,11 @@ export default function MetallicPaint({
     if (!gl || !uniforms) return;
     gl.uniform1f(uniforms.u_edge, params.edge);
     gl.uniform1f(uniforms.u_patternBlur, params.patternBlur);
-    gl.uniform1f(uniforms.u_time, 0);
+    gl.uniform1f(uniforms.u_time, totalAnimationTime.current);
     gl.uniform1f(uniforms.u_patternScale, params.patternScale);
     gl.uniform1f(uniforms.u_refraction, params.refraction);
     gl.uniform1f(uniforms.u_liquid, params.liquid);
   }
-
-  useEffect(() => {
-    function initShader() {
-      const canvas = canvasRef.current;
-      const glContext = canvas?.getContext("webgl2", {
-        antialias: true,
-        alpha: true,
-      });
-      if (!canvas || !glContext) {
-        return;
-      }
-
-      function createShader(
-        gl: WebGL2RenderingContext,
-        sourceCode: string,
-        type: number,
-      ) {
-        const shader = gl.createShader(type);
-        if (!shader) {
-          return null;
-        }
-
-        gl.shaderSource(shader, sourceCode);
-        gl.compileShader(shader);
-
-        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-          gl.deleteShader(shader);
-          return null;
-        }
-
-        return shader;
-      }
-
-      const vertexShader = createShader(
-        glContext,
-        vertexShaderSource,
-        glContext.VERTEX_SHADER,
-      );
-      const fragmentShader = createShader(
-        glContext,
-        liquidFragSource,
-        glContext.FRAGMENT_SHADER,
-      );
-      const program = glContext.createProgram();
-      if (!program || !vertexShader || !fragmentShader) {
-        return;
-      }
-
-      glContext.attachShader(program, vertexShader);
-      glContext.attachShader(program, fragmentShader);
-      glContext.linkProgram(program);
-
-      if (!glContext.getProgramParameter(program, glContext.LINK_STATUS)) {
-        return null;
-      }
-
-      function getUniforms(program: WebGLProgram, gl: WebGL2RenderingContext) {
-        const uniforms: Record<string, WebGLUniformLocation> = {};
-        const uniformCount = gl.getProgramParameter(
-          program,
-          gl.ACTIVE_UNIFORMS,
-        );
-        for (let i = 0; i < uniformCount; i++) {
-          const uniformName = gl.getActiveUniform(program, i)?.name;
-          if (!uniformName) continue;
-          const location = gl.getUniformLocation(program, uniformName);
-          if (location) {
-            uniforms[uniformName] = location;
-          }
-        }
-        return uniforms;
-      }
-      const uniforms = getUniforms(program, glContext);
-      setUniforms(uniforms);
-
-      const vertices = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]);
-      const vertexBuffer = glContext.createBuffer();
-      glContext.bindBuffer(glContext.ARRAY_BUFFER, vertexBuffer);
-      glContext.bufferData(
-        glContext.ARRAY_BUFFER,
-        vertices,
-        glContext.STATIC_DRAW,
-      );
-
-      glContext.useProgram(program);
-
-      const positionLocation = glContext.getAttribLocation(
-        program,
-        "a_position",
-      );
-      glContext.enableVertexAttribArray(positionLocation);
-
-      glContext.bindBuffer(glContext.ARRAY_BUFFER, vertexBuffer);
-      glContext.vertexAttribPointer(
-        positionLocation,
-        2,
-        glContext.FLOAT,
-        false,
-        0,
-        0,
-      );
-
-      setGl(glContext);
-    }
-
-    initShader();
-    updateUniforms();
-  }, []);
-
-  useEffect(() => {
-    if (!gl || !uniforms) return;
-    updateUniforms();
-  }, [gl, params, uniforms]);
 
   useEffect(() => {
     if (!gl || !uniforms) return;
@@ -522,22 +410,39 @@ export default function MetallicPaint({
 
     function render(currentTime: number) {
       if (!gl) return;
+      
+      // Always draw at least once even if not hovered
       const deltaTime = currentTime - lastRenderTime.current;
-      lastRenderTime.current = currentTime;
-
-      totalAnimationTime.current += deltaTime * params.speed;
-      gl.uniform1f(uniforms.u_time, totalAnimationTime.current);
+      
+      if (isHovered) {
+        if (deltaTime < 16) {
+          renderId = requestAnimationFrame(render);
+          return;
+        }
+        lastRenderTime.current = currentTime;
+        totalAnimationTime.current += deltaTime * params.speed;
+        gl.uniform1f(uniforms.u_time, totalAnimationTime.current);
+      }
+      
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-      renderId = requestAnimationFrame(render);
+      
+      if (isHovered) {
+        renderId = requestAnimationFrame(render);
+      }
     }
 
     lastRenderTime.current = performance.now();
-    renderId = requestAnimationFrame(render);
+    if (isHovered) {
+      renderId = requestAnimationFrame(render);
+    } else {
+      // Draw static frame
+      render(performance.now());
+    }
 
     return () => {
-      cancelAnimationFrame(renderId);
+      if (renderId) cancelAnimationFrame(renderId);
     };
-  }, [gl, params.speed]);
+  }, [gl, params.speed, uniforms, isHovered]);
 
   useEffect(() => {
     const canvasEl = canvasRef.current;
@@ -548,83 +453,55 @@ export default function MetallicPaint({
       const imgRatio = imageData.width / imageData.height;
       gl.uniform1f(uniforms.u_img_ratio, imgRatio);
 
-      // 获取容器的实际尺寸
       const container = canvasEl.parentElement;
       const containerWidth = container?.clientWidth || 28;
       const containerHeight = container?.clientHeight || 28;
-
-      // 使用容器尺寸，但保持最小尺寸以保证渲染质量
-      const side = Math.max(containerWidth, containerHeight, 100);
+      const side = Math.max(containerWidth, containerHeight, 60);
 
       canvasEl.width = side * devicePixelRatio;
       canvasEl.height = side * devicePixelRatio;
-      gl.viewport(0, 0, canvasEl.height, canvasEl.height);
+      gl.viewport(0, 0, canvasEl.width, canvasEl.height);
       gl.uniform1f(uniforms.u_ratio, 1);
       gl.uniform1f(uniforms.u_img_ratio, imgRatio);
+      
+      // Re-draw after resize
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     }
 
     resizeCanvas();
-
-    // 使用 ResizeObserver 监听容器尺寸变化
-    const resizeObserver = new ResizeObserver(() => {
-      resizeCanvas();
-    });
-
+    const resizeObserver = new ResizeObserver(() => resizeCanvas());
     const container = canvasEl.parentElement;
-    if (container) {
-      resizeObserver.observe(container);
-    }
-
-    return () => {
-      resizeObserver.disconnect();
-    };
+    if (container) resizeObserver.observe(container);
+    return () => resizeObserver.disconnect();
   }, [gl, uniforms, imageData]);
 
   useEffect(() => {
-    if (!gl || !uniforms) {
-      return;
-    }
-
+    if (!gl || !uniforms) return;
     const existingTexture = gl.getParameter(gl.TEXTURE_BINDING_2D);
-    if (existingTexture) {
-      gl.deleteTexture(existingTexture);
-    }
-
+    if (existingTexture) gl.deleteTexture(existingTexture);
     const imageTexture = gl.createTexture();
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, imageTexture);
-
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-
     try {
-      gl.texImage2D(
-        gl.TEXTURE_2D,
-        0,
-        gl.RGBA,
-        imageData?.width,
-        imageData?.height,
-        0,
-        gl.RGBA,
-        gl.UNSIGNED_BYTE,
-        imageData?.data,
-      );
-
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, imageData?.width, imageData?.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, imageData?.data);
       gl.uniform1i(uniforms.u_image_texture, 0);
-    } catch (e) {
-      // 纹理上传失败，静默处理
-    }
-
-    return () => {
-      if (imageTexture) {
-        gl.deleteTexture(imageTexture);
-      }
-    };
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    } catch (e) {}
+    return () => { if (imageTexture) gl.deleteTexture(imageTexture); };
   }, [gl, uniforms, imageData]);
 
-  return <canvas ref={canvasRef} className="paint-container" />;
+  return (
+    <div 
+      className="paint-wrapper w-full h-full"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <canvas ref={canvasRef} className="paint-container w-full h-full block" />
+    </div>
+  );
 }
