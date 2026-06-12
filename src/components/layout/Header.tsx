@@ -62,11 +62,7 @@ export default function Header() {
               <ShinyText
                 text="Apllgen"
                 speed={2}
-                delay={0}
                 spread={120}
-                direction="left"
-                yoyo={false}
-                pauseOnHover={false}
                 className="text-base font-bold select-none"
               />
             </motion.div>

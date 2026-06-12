@@ -133,7 +133,7 @@ export default function SplashCursor({
       TRANSPARENT,
     };
 
-    let { gl, ext } = getWebGLContext(canvas);
+    const { gl, ext } = getWebGLContext(canvas);
     if (!gl || !ext) return;
 
     if (!ext.supportLinearFiltering) {
@@ -595,8 +595,8 @@ export default function SplashCursor({
     function initFramebuffers() {
       const simRes = getResolution(config.SIM_RESOLUTION);
       const dyeRes = getResolution(config.DYE_RESOLUTION);
-      const texType = ext.halfFloatTexType, rgba = ext.formatRGBA, rg = ext.formatRG, r = ext.formatR;
-      const filtering = ext.supportLinearFiltering ? gl!.LINEAR : gl!.NEAREST;
+      const texType = ext!.halfFloatTexType, rgba = ext!.formatRGBA, rg = ext!.formatRG, r = ext!.formatR;
+      const filtering = ext!.supportLinearFiltering ? gl!.LINEAR : gl!.NEAREST;
       gl!.disable(gl!.BLEND);
       dye = createDoubleFBO(dyeRes.width, dyeRes.height, rgba.internalFormat, rgba.format, texType, filtering);
       velocity = createDoubleFBO(simRes.width, simRes.height, rg.internalFormat, rg.format, texType, filtering);
@@ -666,14 +666,14 @@ export default function SplashCursor({
       blit(velocity.write); velocity.swap();
       advectionProgram.bind();
       gl!.uniform2f(advectionProgram.uniforms.texelSize!, velocity.texelSizeX, velocity.texelSizeY);
-      if (!ext.supportLinearFiltering) gl!.uniform2f(advectionProgram.uniforms.dyeTexelSize!, velocity.texelSizeX, velocity.texelSizeY);
+      if (!ext!.supportLinearFiltering) gl!.uniform2f(advectionProgram.uniforms.dyeTexelSize!, velocity.texelSizeX, velocity.texelSizeY);
       const vId = velocity.read.attach(0);
       gl!.uniform1i(advectionProgram.uniforms.uVelocity!, vId);
       gl!.uniform1i(advectionProgram.uniforms.uSource!, vId);
       gl!.uniform1f(advectionProgram.uniforms.dt!, dt);
       gl!.uniform1f(advectionProgram.uniforms.dissipation!, config.VELOCITY_DISSIPATION);
       blit(velocity.write); velocity.swap();
-      if (!ext.supportLinearFiltering) gl!.uniform2f(advectionProgram.uniforms.dyeTexelSize!, dye.texelSizeX, dye.texelSizeY);
+      if (!ext!.supportLinearFiltering) gl!.uniform2f(advectionProgram.uniforms.dyeTexelSize!, dye.texelSizeX, dye.texelSizeY);
       gl!.uniform1i(advectionProgram.uniforms.uVelocity!, velocity.read.attach(0));
       gl!.uniform1i(advectionProgram.uniforms.uSource!, dye.read.attach(1));
       gl!.uniform1f(advectionProgram.uniforms.dissipation!, config.DENSITY_DISSIPATION);
